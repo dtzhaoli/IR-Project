@@ -145,11 +145,12 @@ def SaveIndex(fileout):         # 压缩并保存倒排索引到磁盘
         gammastr += GammaEncode(dic[i].index[0]+1)     # gamma编码的第一个数+1
         for j in range(1, dic[i].df):
             gammastr += GammaEncode( dic[i].index[j] - dic[i].index[j-1] )
+
         # f.write(dic[i].token + " " +gammastr)
         # 将gamma编码以二进制流的形式写入
         f.write(struct.pack('I', len(gammastr)))       # 先写入字符串的长度，为了读取方便
         for j in range(0, len(gammastr), 8):
-            if j + 8 < len(gammastr):
+            if j + 8 <= len(gammastr):
                 f.write(struct.pack('B', int(gammastr[j:j + 8], 2)))
             else:
                 f.write(struct.pack('B', int(gammastr[j:], 2)))
@@ -198,12 +199,13 @@ def ReadIndex(fileindex):         # 从磁盘读取倒排索引并解压
         for j in range(0, gammalen, 8):
             tempstr = bin(struct.unpack('B', f.read(1))[0])[2:]
             # 补全“0”，以为转成二进制流的时候按Byte切分，丢失了每个Byte中前面的“0”
-            if j + 8 < gammalen:
+            if j + 8 <= gammalen:
                 tempstr = "0"*(8 - len(tempstr)) + tempstr
                 gammastr += tempstr
             else:
                 tempstr = "0" * ((gammalen % 8) - len(tempstr)) + tempstr
                 gammastr += tempstr
+
         result = Gammadecode(gammastr)
         # print result
 
@@ -211,6 +213,7 @@ def ReadIndex(fileindex):         # 从磁盘读取倒排索引并解压
         dicitem.index.append(result[0])
         for j in range(1, len(result)):
             dicitem.index.append(dicitem.index[j-1]+result[j])
+
         f.readline()
         # print dicitem.index
         dic.append(dicitem)
